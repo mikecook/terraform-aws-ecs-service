@@ -34,7 +34,7 @@ locals {
       portMappings = [
         {
           containerPort = 4567
-          hostPort      = 80
+          hostPort      = 4567
           "protocol": "tcp"
         }
       ]
