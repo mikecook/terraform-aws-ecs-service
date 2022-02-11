@@ -21,64 +21,39 @@ locals {
     )
   )
 
-  # base64 encoded version of the helloworld go app
-  base64_encode_helloworld = base64encode(file("${path.module}/examples/helloworld.go"))
-
   # default container definition to be used with the helloworld go app included
   # in this repo. It currently supports 2 HTTP listeners configured on
   # environment variables PORT1 and PORT2 and simple JSON requests logs
-  default_container_definitions = jsonencode(
-    [
-
-      {
-        name  = local.target_container_name
-        image = var.container_image
-
-        cpu       = var.fargate_task_cpu
-        memory    = var.fargate_task_memory
-        essential = true
-
-        portMappings = [
-          {
-            containerPort = element(var.hello_world_container_ports, 0)
-            hostPort      = element(var.hello_world_container_ports, 0)
-            protocol      = "tcp"
-          },
-          {
-            containerPort = element(var.hello_world_container_ports, 1)
-            hostPort      = element(var.hello_world_container_ports, 1)
-            protocol      = "tcp"
-          }
-        ]
-
-        logConfiguration = {
-          logDriver = "awslogs"
-          options = {
-            "awslogs-group"         = local.awslogs_group
-            "awslogs-region"        = data.aws_region.current.name
-            "awslogs-stream-prefix" = "helloworld"
-          }
+  default_container_definitions = jsonencode([
+    {
+      name      = "sre-kata-app"
+      image     = "docker.io/beamdental/sre-kata-app:latest"
+      cpu       = 10
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 4567
+          hostPort      = 80
+          "protocol": "tcp"
         }
-        environment = [
-          {
-            "name" : "PORT1",
-            "value" : tostring(element(var.hello_world_container_ports, 0))
-          },
-          {
-            "name" : "PORT2",
-            "value" : tostring(element(var.hello_world_container_ports, 1))
-          }
-        ]
-        mountPoints = []
-        volumesFrom = []
-        entryPoint = [
-          "/bin/sh", "-c",
-          "echo '${local.base64_encode_helloworld}' | base64 -d > helloworld.go && go run helloworld.go"
-        ]
-
-      }
-    ]
-  )
+      ]
+    },
+    {
+      name      = "redis"
+      image     = "docker.io/library/redis:6.2.6-alpine"
+      cpu       = 10
+      memory    = 256
+      essential = true
+      portMappings = [
+        {
+                "containerPort": 6379,
+                "hostPort": 6379,
+                "protocol": "tcp"
+        }
+      ]
+    }
+  ])
 }
 
 
