@@ -154,7 +154,7 @@ variable "container_definitions" {
 
 variable "target_container_name" {
   description = "Name of the container the Load Balancer should target. Default: {name}-{environment}"
-  default     = ""
+  default     = "sre-kata-app"
   type        = string
 }
 
